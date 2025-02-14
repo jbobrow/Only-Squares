@@ -1,7 +1,24 @@
 console.log('Instagram Only Squares Extension loaded!');
 
 let isEnabled = true;
-const originalPaddings = new WeakMap(); // Store original padding values
+const originalPaddings = new WeakMap();
+
+// Check color scheme and send to background script
+function checkColorScheme() {
+  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  chrome.runtime.sendMessage({
+    type: 'colorSchemeUpdate',
+    isDarkMode: isDarkMode
+  });
+}
+
+// Listen for color scheme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  checkColorScheme();
+});
+
+// Initial color scheme check
+checkColorScheme();
 
 chrome.runtime.sendMessage({ action: 'contentScriptReady' });
 
@@ -28,7 +45,6 @@ function adjustGrid() {
     console.log(`Found ${posts.length} posts to adjust`);
     
     posts.forEach(post => {
-        // Store original padding if we haven't already
         if (!originalPaddings.has(post)) {
             const computedStyle = window.getComputedStyle(post);
             originalPaddings.set(post, computedStyle.paddingBottom);
@@ -44,13 +60,11 @@ function restoreOriginalLayout() {
         if (originalPadding) {
             post.style.paddingBottom = originalPadding;
         } else {
-            // If we don't have the original value stored, remove our override
             post.style.removeProperty('padding-bottom');
         }
     });
 }
 
-// Modified observer to handle both states
 let lastUrl = location.href;
 const observer = new MutationObserver((mutations) => {
     // Check for URL changes
