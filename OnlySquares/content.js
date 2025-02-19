@@ -1,17 +1,10 @@
 console.log('Instagram Only Squares Extension loaded!');
 
 let isEnabled = true;
-const originalPaddings = new WeakMap(); // Store original padding values
-
-chrome.runtime.sendMessage({ action: 'contentScriptReady' });
-
-chrome.storage.sync.get(['enabled'], function(result) {
-  isEnabled = result.enabled !== false;
-  if (isEnabled) adjustGrid();
-});
+const originalPaddings = new WeakMap();
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  if (request.action === 'toggleGrid') {
+  if (request.action === 'syncState') {
     isEnabled = request.enabled;
     if (isEnabled) {
       adjustGrid();
